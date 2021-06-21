@@ -1,0 +1,72 @@
+{
+  "category1" : {
+    "item1": "one"
+  },
+  "category2" : {
+    "item1" : "one",
+    "item2" : "two"
+  },
+  "category3" :{
+    "stanza1" : {
+      "stanzaitem1" : "one",
+      "stanzastanza1" : {
+        "stanzaitem2" :"two"
+      }
+    },
+    "stanza2" : [
+
+        {
+          "embeditemname" : "e1",
+          "stanzaitem3" :"threeA"
+        }
+      ,
+
+        {
+          "embeditemname" : "e2",
+          "stanzaitem3" :"threeB"
+        }
+
+    ]
+  },
+  "configWithList" : {
+    "MyList" : ["item1","item2"]
+  },
+
+  "libreLogger" : {
+    "loggers": [
+      {
+        "EDGEMAIN": {
+          "topic": "EDGEMAIN"
+        }
+      },
+      {
+        "OPCUA": {
+          "topic": "OPCUA"
+        }
+      },
+      {
+        "GRAPHQL": {
+          "topic": "GRAPHQL"
+        }
+      },
+      {
+        "LIBRCONN": {
+          "topic": "LIBRCONN"
+        }
+      },
+      {
+        "MQTT": {
+          "topic": "MQTT"
+        }
+      },
+      {
+        "DEFAULT": {
+          "topic": "DEFAULT",
+          "destination": [
+            "CONSOLE"
+          ]
+        }
+      }
+    ]
+  }
+}
