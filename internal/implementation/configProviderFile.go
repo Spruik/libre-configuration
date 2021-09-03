@@ -54,10 +54,10 @@ func (s *configProviderFile) GetConfigEntry(component string, key string) (strin
 			if node != nil {
 				return node.InnerText(), nil
 			} else {
-				return "", nil
+				return "", errors.New(fmt.Sprintf("Key given is not in the component configuration: %s/%s", component, key))
 			}
 		} else {
-			return "", errors.New(fmt.Sprintf("key given is not in the component configuration: %s/%s", key, component))
+			return "", err
 		}
 	} else {
 		return "", errors.New(fmt.Sprintf("Component name given is not in the configuration: %s", component))
