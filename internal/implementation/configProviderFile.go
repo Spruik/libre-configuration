@@ -3,10 +3,13 @@ package implementation
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/Spruik/libre-configuration/shared"
 	"github.com/antchfx/jsonquery"
-	"os"
 )
+
+const errMessageNotInitalized = "configProviderFile not initialized. Please call `Initialize(\"path/to/file.json\")`"
 
 type configProviderFile struct {
 	doc      *jsonquery.Node
@@ -22,20 +25,26 @@ func NewConfigProviderFile() *configProviderFile {
 func (s *configProviderFile) Initialize(filePath string) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		panic(fmt.Sprintf("Cannot find config file at %s err= %+v", filePath, err))
+		panic(fmt.Sprintf("cannot find config file at %s err= %+v", filePath, err))
 	}
 	s.doc, err = jsonquery.Parse(f)
 	if err != nil {
-		panic(fmt.Sprintf("Cannot parse config file at %s  err= %+v", filePath, err))
+		panic(fmt.Sprintf("cannot parse config file at %s  err= %+v", filePath, err))
 	}
 
 	nodes, err := jsonquery.QueryAll(s.doc, "/*")
+	if err != nil {
+		panic(fmt.Errorf("failed to json deserialize file %s, expected no error; got %s", filePath, err))
+	}
 	for _, j := range nodes {
 		s.topicMap[j.Data] = j
 	}
 }
 
 func (s *configProviderFile) GetComponentConfig(component string) *shared.ConfigItem {
+	if s == nil {
+		return nil
+	}
 	node := s.topicMap[component]
 	if node != nil {
 		ret := s.processNode(node)
@@ -47,6 +56,9 @@ func (s *configProviderFile) GetComponentConfig(component string) *shared.Config
 }
 
 func (s *configProviderFile) GetConfigEntry(component string, key string) (string, error) {
+	if s == nil {
+		return "", errors.New(errMessageNotInitalized)
+	}
 	comp := s.topicMap[component]
 	if comp != nil {
 		node, err := jsonquery.Query(comp, key)
@@ -54,17 +66,20 @@ func (s *configProviderFile) GetConfigEntry(component string, key string) (strin
 			if node != nil {
 				return node.InnerText(), nil
 			} else {
-				return "", errors.New(fmt.Sprintf("Key given is not in the component configuration: %s/%s", component, key))
+				return "", fmt.Errorf("key given is not in the component configuration: %s/%s", component, key)
 			}
 		} else {
 			return "", err
 		}
 	} else {
-		return "", errors.New(fmt.Sprintf("Component name given is not in the configuration: %s", component))
+		return "", fmt.Errorf("component name given is not in the configuration: %s", component)
 	}
 }
 
 func (s *configProviderFile) GetConfigEntryWithDefault(component string, key string, dflt string) (string, error) {
+	if s == nil {
+		return dflt, errors.New(errMessageNotInitalized)
+	}
 	comp := s.topicMap[component]
 	if comp != nil {
 		node, err := jsonquery.Query(comp, key)
@@ -78,11 +93,14 @@ func (s *configProviderFile) GetConfigEntryWithDefault(component string, key str
 			return dflt, nil
 		}
 	} else {
-		return "", errors.New(fmt.Sprintf("Component name given is not in the configuration: %s", component))
+		return "", fmt.Errorf("component name given is not in the configuration: %s", component)
 	}
 }
 
 func (s *configProviderFile) GetConfigStanza(component string, top string) (*shared.ConfigItem, error) {
+	if s == nil {
+		return nil, errors.New(errMessageNotInitalized)
+	}
 	node, err := jsonquery.Query(s.topicMap[component], top)
 	if err == nil {
 		if node != nil {
